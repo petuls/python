@@ -66,7 +66,37 @@ class DenyDeleteCog(commands.Cog):
             f"**Who did it:** {user_display_name} (ID: `{user_id}`)\n"
             f"**Reason:** {reason_display}"
         )
+        await asyncio.sleep(3) # 
+        try:
+            # delete
+            if isinstance(current_channel, (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.ForumChannel, discord.CategoryChannel)):
+                await current_channel.delete(reason=f"Deny-Delete command by {user_display_name} (ID: {user_id}). Reason: {deletion_reason_audit_log}")
+            else:
+                await interaction.followup.send(
+                    "Can't delete :(",
+                    ephemeral=True,
+                    allowed_mentions=no_mentions
+                )
+                print(f"Tried to delete unsupported channel type: {type(current_channel).__name__} (ID: {channel_id})")
+        except discord.Forbidden:
+            # If no perms stuff
+            await interaction.followup.send(
+                "No perms to delete :(",
+                ephemeral=True,
+                allowed_mentions=no_mentions
+            )
+            print(f"I lacks permissions to delete channel {channel_name} (ID: {channel_id})!!!!!!")
+        except discord.HTTPException as e:
+            # HTTP ERRORS
+            await interaction.followup.send(
+                f"Error deleting channel: {e}",
+                ephemeral=True,
+                allowed_mentions=no_mentions
+            )
+            print(f"Error deleting channel {channel_name} (ID: {channel_id}): {e}")
 
+
+        await asyncio.sleep(1) # 
         try:
             # check if can msg
             if isinstance(log_channel, (discord.TextChannel, discord.Thread)):
@@ -93,35 +123,8 @@ class DenyDeleteCog(commands.Cog):
                 allowed_mentions=no_mentions
             )
 
-        await asyncio.sleep(3) # Wait for 5 seconds before deleting the channel
 
-        try:
-          # delete
-            if isinstance(current_channel, (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.ForumChannel, discord.CategoryChannel)):
-                await current_channel.delete(reason=f"Deny-Delete command by {user_display_name} (ID: {user_id}). Reason: {deletion_reason_audit_log}")
-            else:
-                await interaction.followup.send(
-                    "Can't delete :(",
-                    ephemeral=True,
-                    allowed_mentions=no_mentions
-                )
-                print(f"Tried to delete unsupported channel type: {type(current_channel).__name__} (ID: {channel_id})")
-        except discord.Forbidden:
-            # If no perms stuff
-            await interaction.followup.send(
-                "No perms to delete :(",
-                ephemeral=True,
-                allowed_mentions=no_mentions
-            )
-            print(f"I lacks permissions to delete channel {channel_name} (ID: {channel_id})!!!!!!")
-        except discord.HTTPException as e:
-            # HTTP ERRORS
-            await interaction.followup.send(
-                f"Error deleting channel: {e}",
-                ephemeral=True,
-                allowed_mentions=no_mentions
-            )
-            print(f"Error deleting channel {channel_name} (ID: {channel_id}): {e}")
+     
 
     # Error handler (copied i love github and stackoverflow RAHHHHHHHHHHHHHHHHHHHHHH)
     @deny_delete.error
